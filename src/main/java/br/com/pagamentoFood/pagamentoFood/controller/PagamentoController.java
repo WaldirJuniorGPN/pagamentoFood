@@ -4,8 +4,10 @@ import br.com.pagamentoFood.pagamentoFood.dto.request.DadosAtualizacaoPagamento;
 import br.com.pagamentoFood.pagamentoFood.dto.request.DadosCadastroPagamento;
 import br.com.pagamentoFood.pagamentoFood.dto.response.DadosDetalhamentoPagamento;
 import br.com.pagamentoFood.pagamentoFood.service.PagamentoService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
-@RequestMapping("pagamentos")
+@RequestMapping("/pagamentos")
 public class PagamentoController {
 
     @Autowired
@@ -51,5 +53,15 @@ public class PagamentoController {
     public ResponseEntity deletar(@PathVariable Long id) {
         this.pagamentoService.deletar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/confirmar")
+    @CircuitBreaker(name = "atualizaPagamento", fallbackMethod = "pagamentoAutorizadoComIntegracaoPendente")
+    public void confirmarPagamento(@PathVariable @NotNull Long id) {
+        this.pagamentoService.confirmarPagamento(id);
+    }
+
+    public void pagamentoAutorizadoComIntegracaoPendente(Long id, Exception e) {
+        this.pagamentoService.alteraStatus(id);
     }
 }

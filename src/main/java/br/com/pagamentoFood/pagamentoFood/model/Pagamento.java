@@ -70,4 +70,8 @@ public class Pagamento {
             this.formaDePagamentoId = dados.formaDepagamentoId();
         }
     }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
 }
